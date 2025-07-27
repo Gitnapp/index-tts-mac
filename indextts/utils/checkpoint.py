@@ -25,7 +25,19 @@ import yaml
 def load_checkpoint(model: torch.nn.Module, model_pth: str) -> dict:
     checkpoint = torch.load(model_pth, map_location='cpu')
     checkpoint = checkpoint['model'] if 'model' in checkpoint else checkpoint
-    model.load_state_dict(checkpoint, strict=True)
+    
+    # Handle position encoding size mismatch
+    model_state = model.state_dict()
+    for key in list(checkpoint.keys()):
+        if key in model_state:
+            if checkpoint[key].shape != model_state[key].shape:
+                if 'pos_enc.pe' in key:
+                    # Skip position encoding parameters with size mismatch
+                    print(f"Skipping {key} due to size mismatch: {checkpoint[key].shape} != {model_state[key].shape}")
+                    del checkpoint[key]
+                    continue
+    
+    model.load_state_dict(checkpoint, strict=False)
     info_path = re.sub('.pth$', '.yaml', model_pth)
     configs = {}
     if os.path.exists(info_path):

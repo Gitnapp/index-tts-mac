@@ -388,7 +388,7 @@ class BaseEncoder(torch.nn.Module):
             input_size,
             output_size,
             dropout_rate,
-            pos_enc_class(output_size, dropout_rate),
+            pos_enc_class(output_size, dropout_rate, max_len=5000),
         )
 
         self.normalize_before = normalize_before
